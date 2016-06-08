@@ -45,12 +45,16 @@ local typeFilters = {
 	"Wallpaper",
 	"Script",
 }
-
+local function directory_exists(directory)
+      return os.rename(directory,directory)
+end
 local appStorePath = "MineOS/System/AppStore/"
-local pathAllApplications = "MineOS/System/OS/Repository/AlnaStudio/Applications.txt"
---local ApplicationsRep = ecs.getFileList(pathAllApplications)
-local pathToApplications = "MineOS/System/OS/Repository/AlnaStudio/Applications.txt"
-pathAllApplications=pathToApplications
+local pathAllApplications = "MineOS/System/OS/Repository/"
+local ApplicationsRep = {}
+ApplicationsRep = ecs.getFileList(pathAllApplications)
+local RepNumber = 1
+--local pathToApplications = "MineOS/System/OS/Repository/ECS/Applications.txt"
+--pathAllApplications=pathToApplications
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
 -- local topBarElements = {{title = "Приложения", type = "Application"}, {title = "Библиотеки", type = "Library"}, {title = "Обои", type = "Wallpaper"}, {title = "Другое"}, {title = "Обновления"}}
 local topBarElements = {"Приложения", "Библиотеки", "Обои", "Другое", "Обновления", "Репозиторий"}
@@ -141,6 +145,7 @@ local function getApplication(i)
 	else
 		currentApps[i].version = "Версия не указана"
 	end
+	currentApps[i].repository = "Репозиторий: " .. ApplicationsRep[RepNumber]
 end
 
 local function checkAppExists(name, type)
@@ -154,6 +159,8 @@ local function drawApplication(x, y, i, doNotDrawButton)
 	buffer.image(x, y, currentApps[i].icon)
 	buffer.text(x + 10, y, colors.appName, currentApps[i].name)
 	buffer.text(x + 10, y + 1, colors.version, currentApps[i].version)
+	buffer.text(x + 10, y + 2, colors.version, currentApps[i].repository)
+
 	local appExists = checkAppExists(newApplications[i].name, newApplications[i].type)
 	local text = appExists and "Обновить" or "Загрузить"
 	
@@ -168,7 +175,7 @@ local function drawApplication(x, y, i, doNotDrawButton)
 	end
 
 	for j = 1, #currentApps[i].description do
-		buffer.text(x + 10, y + j + 1, colors.description, currentApps[i].description[j])
+		buffer.text(x + 10, y + j + 2, colors.description, currentApps[i].description[j])
 	end
 	y = y + (#currentApps[i].description > 2 and #currentApps[i].description - 2 or 0)
 	y = y + 5
@@ -228,7 +235,7 @@ local function drawMain(refreshData)
 end
 
 local function getNewApplications()
-	local pathToNewApplications = appStorePath .. "NewApplications.txt"
+	local pathToNewApplications = pathAllApplications..ApplicationsRep[RepNumber].. "NewApplications.txt"
 	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
 	newApplications = files.loadTableFromFile(pathToNewApplications)
 end
@@ -284,14 +291,14 @@ local function flush()
 	currentApps = {}
 end
 
-local function loadOldApplications(i)
+local function loadOldApplications(RepNumber)
 	--oldApplications = files.loadTableFromFile(pathToApplications)
-	oldApplications=files.loadTableFromFile(pathAllApplications)
+	oldApplications=files.loadTableFromFile(pathAllApplications..ApplicationsRep[RepNumber].."Applications.txt")
 end
 
-local function saveOldApplications(i)
+local function saveOldApplications(RepNumber)
 	--files.saveTableToFile(pathToApplications, oldApplications)
-	files.saveTableToFile(pathAllApplications, oldApplications)
+	files.saveTableToFile(pathAllApplications..ApplicationsRep[RepNumber].."Applications.txt", oldApplications)
 end
 
 local function drawAll(refreshIcons, force)
@@ -319,8 +326,8 @@ end
 
 local function updateAll()
 	local y = updateImageWindow()
-	local barWidth = math.floor(sizes.width * 0.6)
-	local xBar = math.floor(sizes.x + sizes.width / 2 - barWidth / 2)
+	local barWidth = math.floor(sizes.widDth * 0.6)
+	local xBar = math.floor(sizes.x + sizDes.width / 2 - barWidth / 2)
 	y = y + 2
 	for i = 1, #changes do
 		local text = "Обновление " .. fs.name(newApplications[changes[i]].name)
@@ -333,7 +340,7 @@ local function updateAll()
 	end
 	changes = {}
 	oldApplications = newApplications
-	saveOldApplications("1")
+	saveOldApplications(1)
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -349,7 +356,7 @@ end
 fs.makeDirectory(appStorePath)
 calculateSizes()
 flush()
-loadOldApplications("1")
+loadOldApplications(1)
 drawTopBar()
 GUI.windowShadow(sizes.x, sizes.y, sizes.width, sizes.height, 50)
 updateImageWindowWithText("Загрузка списка приложений")
