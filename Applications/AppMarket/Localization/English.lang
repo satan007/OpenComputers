@@ -4,7 +4,7 @@
 	wallpapers = "Wallpapers",
 	other = "Other",
 	updates = "Updates",
-	repository = "Repository"
+	repository = "Repository",
 	downloadingApplicationsList = "Downloading applications list",
 	version = "Version: ",
 	descriptionNotAvailable = "No description",

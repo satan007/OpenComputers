@@ -108,7 +108,7 @@ local function getDescription(url)
 	if success then
 		return response
 	else
-		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = localization.errorWhileLoadingDescription}}
+		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = localization.errorWhileLoadingDescription}})
 	end
 end
 

@@ -4,7 +4,7 @@
 	wallpapers = "Обои",
 	other = "Другое",
 	updates = "Обновления",
-	repository = "Репозиторий"
+	repository = "Репозиторий",
 	downloadingApplicationsList = "Загрузка списка приложений",
 	version = "Версия: ",
 	descriptionNotAvailable = "Описание отсутствует",
