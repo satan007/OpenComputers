@@ -73,7 +73,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 --Отрисовка одной иконки
-function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
+function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor, texthide)
 	local fileFormat, icon = ecs.getFileFormat(path)
 
 	if fs.isDirectory(path) then
@@ -87,7 +87,7 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
 		end
 	else
 		if fileFormat == ".lnk" then
-			MineOSCore.drawIcon(x, y, ecs.readShortcut(path), showFileFormat, nameColor)
+			MineOSCore.drawIcon(x, y, ecs.readShortcut(path), showFileFormat, nameColor, texthide)
 			buffer.set(x + MineOSCore.iconWidth - 3, y + MineOSCore.iconHeight - 3, 0xFFFFFF, 0x000000, "<")
 			return 0
 		elseif fileFormat == ".cfg" or fileFormat == ".config" then
@@ -115,12 +115,14 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
 	buffer.image(x + 2, y, MineOSCore.icons[icon])
 
 	--Делаем текст для иконки
-	local text = fs.name(path)
-	if not showFileFormat and fileFormat then text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1)) end
-	text = ecs.stringLimit("end", text, MineOSCore.iconWidth)
-	x = x + math.floor(MineOSCore.iconWidth / 2 - unicode.len(text) / 2)
-	--Рисуем текст под иконкой
-	buffer.text(x, y + MineOSCore.iconHeight - 1, nameColor or 0xffffff, text)
+	if not texthide then
+		local text = fs.name(path)
+		if not showFileFormat and fileFormat then text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1)) end
+		text = ecs.stringLimit("end", text, MineOSCore.iconWidth)
+		x = x + math.floor(MineOSCore.iconWidth / 2 - unicode.len(text) / 2)
+		--Рисуем текст под иконкой
+		buffer.text(x, y + MineOSCore.iconHeight - 1, nameColor or 0xffffff, text)
+	end
 end
 
 function MineOSCore.safeLaunch(command, ...)
@@ -198,7 +200,7 @@ function MineOSCore.getParametersForDrawingIcons(fieldWidth, fieldHeight, xSpace
 	return xCountOfIcons, yCountOfIcons, totalCountOfIcons
 end
 
-function MineOSCore.drawIconField(x, y, xCountOfIcons, yCountOfIcons, fromIcon, totalCountOfIcons, xSpaceBetweenIcons, ySpaceBetweenIcons, path, fileList, showFileFormat, iconTextColor)
+function MineOSCore.drawIconField(x, y, xCountOfIcons, yCountOfIcons, fromIcon, totalCountOfIcons, xSpaceBetweenIcons, ySpaceBetweenIcons, path, fileList, showFileFormat, iconTextColor, texthide)
 	local iconObjects = {}
 
 	local xPos, yPos, iconCounter = x, y, 1
@@ -208,7 +210,7 @@ function MineOSCore.drawIconField(x, y, xCountOfIcons, yCountOfIcons, fromIcon, 
 		local iconObject = GUI.object(xPos, yPos, MineOSCore.iconWidth, MineOSCore.iconHeight)
 		iconObject.path = path .. fileList[i]
 		table.insert(iconObjects, iconObject)
-		MineOSCore.drawIcon(xPos, yPos, iconObject.path, showFileFormat, iconTextColor)
+		MineOSCore.drawIcon(xPos, yPos, iconObject.path, showFileFormat, iconTextColor, texthide)
 
 		xPos = xPos + MineOSCore.iconWidth + xSpaceBetweenIcons
 		iconCounter = iconCounter + 1
@@ -231,7 +233,7 @@ end
 function MineOSCore.iconSelect(icon, selectionColor, selectionTransparency, iconTextColor)
 	local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, MineOSCore.iconWidth, MineOSCore.iconHeight)
 	buffer.square(icon.x, icon.y, MineOSCore.iconWidth, MineOSCore.iconHeight, selectionColor, 0xFFFFFF, " ", selectionTransparency)
-	MineOSCore.drawIcon(icon.x, icon.y, icon.path, false, iconTextColor)
+	MineOSCore.drawIcon(icon.x, icon.y, icon.path, false, iconTextColor, true)
 	buffer.draw()
 	return oldPixelsOfIcon
 end

@@ -48,6 +48,7 @@ local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 local currentDesktop = 1
 local showHiddenFiles = false
 local showFileFormat = false
+local texthide = false
 local sortingMethod = "type"
 local wallpaper
 local currentCountOfIconsInDock
@@ -72,7 +73,7 @@ local colors = {
 
 local sizes = {
 	widthOfIcon = 12,
-	heightOfIcon = 6,
+	heightOfIcon = 4,
 	heightOfDock = 4,
 	xSpaceBetweenIcons = 2,
 	ySpaceBetweenIcons = 1,
@@ -120,7 +121,7 @@ local function drawDesktop()
 	--Ебашим раб стол
 	sizes.countOfDesktops = math.ceil(#fileList / sizes.totalCountOfIcons)
 	local fromIcon = currentDesktop * sizes.totalCountOfIcons - sizes.totalCountOfIcons + 1
-	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xPosOfIcons, sizes.yPosOfIcons, sizes.xCountOfIcons, sizes.yCountOfIcons, fromIcon, sizes.totalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPath, fileList, showFileFormat, 0xFFFFFF)
+	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xPosOfIcons, sizes.yPosOfIcons, sizes.xCountOfIcons, sizes.yCountOfIcons, fromIcon, sizes.totalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPath, fileList, showFileFormat, 0xFFFFFF, false)
 
 	--Отрисовываем пиздюлинки под раб столы
 	local width = 4 * sizes.countOfDesktops - 2
@@ -141,32 +142,28 @@ local function drawDock()
 	obj.DockIcons = {}
 
 	--Рассчитываем размер и позицию дока на основе размера
-	local widthOfDock = (currentCountOfIconsInDock * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + sizes.heightOfDock * 2 + 2
-	local xDock, yDock = math.floor(buffer.screen.width / 2 - widthOfDock / 2), buffer.screen.height
+	local widthOfDock = 160
+	local xDock = 0
+	local yDock = buffer.screen.height
 
 	--Рисуем сам док
-	local transparency = colors.dockBaseTransparency
-	local currentDockWidth = widthOfDock - 2
-	for i = 1, sizes.heightOfDock do
-		buffer.text(xDock, yDock, _G.OSSettings.interfaceColor or colors.interface, "▟", transparency)
-		buffer.square(xDock + 1, yDock, currentDockWidth, 1, _G.OSSettings.interfaceColor or colors.interface, 0xFFFFFF, " ", transparency)
-		buffer.text(xDock + currentDockWidth + 1, yDock, _G.OSSettings.interfaceColor or colors.interface, "▙", transparency)
-
-		transparency = transparency + colors.dockTransparencyAdder
-		currentDockWidth = currentDockWidth - 2
-		xDock = xDock + 1
+	local transparency = colors.dockBaseTransparency+colors.dockTransparencyAdder
+	for i = 1, sizes.heightOfDock  do
+		buffer.square(xDock + 1, yDock, widthOfDock, 1, _G.OSSettings.interfaceColor or colors.interface, 0xFFFFFF, " ", transparency)
 		yDock = yDock - 1
 	end
 
 	--Рисуем ярлыки на доке
+	local yIcons = buffer.screen.height - sizes.heightOfDock +1
+	local xIcons = 1 + sizes.xSpaceBetweenIcons + sizes.widthOfIcon
+	MineOSCore.drawIcon(1, yIcons,"MineOS/Applications/StartOS/Resources/Icon.pic", showFileFormat, 0x000000, true)
+	obj.DockIcons[1] = GUI.object(1, yIcons, sizes.widthOfIcon, sizes.heightOfIcon)
+	obj.DockIcons[1].path = "MineOS/Applications/StartOS"
 	if currentCountOfIconsInDock > 0 then
-		local xIcons = math.floor(buffer.screen.width / 2 - ((sizes.widthOfIcon + sizes.xSpaceBetweenIcons) * currentCountOfIconsInDock - sizes.xSpaceBetweenIcons) / 2 )
-		local yIcons = buffer.screen.height - sizes.heightOfDock - 1
-
-		for i = 1, currentCountOfIconsInDock do
-			MineOSCore.drawIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i], showFileFormat, 0x000000)
+		for i = 2, currentCountOfIconsInDock+1 do
+			MineOSCore.drawIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i-1], showFileFormat, 0x000000, true)
 			obj.DockIcons[i] = GUI.object(xIcons, yIcons, sizes.widthOfIcon, sizes.heightOfIcon)
-			obj.DockIcons[i].path = dockShortcuts[i]
+			obj.DockIcons[i].path = dockShortcuts[i-1]
 			xIcons = xIcons + sizes.xSpaceBetweenIcons + sizes.widthOfIcon
 		end
 	end
@@ -175,7 +172,7 @@ end
 -- Нарисовать информацию справа на топбаре
 local function drawTime()
 	local free, total, used = ecs.getInfoAboutRAM()
-	local time = used .. "/".. total .. " KB RAM, " .. unicode.sub(os.date("%T"), 1, -4) .. " "
+	local time = used .. "/".. total .. " KB RAM, " .. unicode.sub(os.date(), 1, -4) .. " "
 	buffer.text(buffer.screen.width - unicode.len(time), 1, 0x262626, time)
 end
 
@@ -258,9 +255,6 @@ local function checkPassword()
 	local hash = SHA2.hash(data[1])
 	if hash == _G.OSSettings.passwordHash then
 		return true
-	elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-		GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-		return true
 	else
 		GUI.error(MineOSCore.localization.incorrectPassword)
 	end
@@ -337,68 +331,6 @@ local function login()
 	ecs.enableInterrupting()
 end
 
----------------------------------------------- Система нотификаций ------------------------------------------------------------------------
-
-local function windows10()
-	if math.random(1, 100) > 25 or _G.OSSettings.showWindows10Upgrade == false then return end
-
-	local width = 44
-	local height = 12
-	local x = math.floor(buffer.screen.width / 2 - width / 2)
-	local y = 2
-
-	local function draw(background)
-		buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
-		buffer.square(x, y + height - 2, width, 2, 0xFFFFFF, 0xFFFFFF, " ")
-
-		buffer.text(x + 2, y + 1, 0xFFFFFF, "Get Windows 10")
-		buffer.text(x + width - 3, y + 1, 0xFFFFFF, "X")
-
-		buffer.image(x + 2, y + 4, image.load("MineOS/System/OS/Icons/Computer.pic"))
-
-		buffer.text(x + 12, y + 4, 0xFFFFFF, "Your MineOS is ready for your")
-		buffer.text(x + 12, y + 5, 0xFFFFFF, "free upgrade.")
-
-		buffer.text(x + 2, y + height - 2, 0x999999, "For a short time we're offering")
-		buffer.text(x + 2, y + height - 1, 0x999999, "a free upgrade to")
-		buffer.text(x + 20, y + height - 1, background, "Windows 10")
-
-		buffer.draw()
-	end
-
-	local function disableUpdates()
-		_G.OSSettings.showWindows10Upgrade = false
-		ecs.saveOSSettings()
-	end
-
-	draw(0x33B6FF)
-
-	while true do
-		local eventData = {event.pull("touch")}
-		if eventData[3] == x + width - 3 and eventData[4] == y + 1 then
-			buffer.text(eventData[3], eventData[4], ecs.colors.blue, "X")
-			buffer.draw()
-			os.sleep(0.2)
-			drawAll()
-			disableUpdates()
-
-			return
-		elseif ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
-			draw(0x0092FF)
-			drawAll()
-
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "  Да шучу я.  "}, {"CenterText", 0x000000, "  Но ведь достали же обновления, верно?  "}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xFFFFFF, "Да"}, {0x999999, 0xFFFFFF, "Нет"}})
-			if data[1] == "Да" then
-				disableUpdates()
-			else
-				GUI.error("Пидора ответ!")
-			end
-
-			return
-		end
-	end
-end
-
 local function changeResolution()
 	currentDesktop = 1
 	ecs.setScale(_G.OSSettings.screenScale or 1)
@@ -426,8 +358,6 @@ changeResolution()
 changeWallpaper()
 getFileListAndDrawAll()
 login()
-windows10()
-
 ---------------------------------------------- Анализ событий ------------------------------------------------------------------------
 
 while true do
@@ -456,9 +386,10 @@ while true do
 				if icon:isClicked(eventData[3], eventData[4]) then
 					local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
 
-					buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-					MineOSCore.drawIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
-					buffer.draw()
+					--buffer.square(icon.x, icon.y, sizes.widthOfIcon-4, sizes.heightOfIcon-2, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
+					MineOSCore.drawIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff, true)
+					buffer.text(icon.x+2, icon.y+3,0xFFD800,"▂▂▂▂▂▂▂▂")
+					--buffer.draw()
 
 					local fileFormat = ecs.getFileFormat(icon.path)
 					if eventData[5] == 0 then

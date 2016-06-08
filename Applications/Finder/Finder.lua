@@ -255,7 +255,7 @@ local function drawFiles()
 	sizes.fromIcon = differenceByIcons < 2 and 1 or math.floor((differenceByIcons - 1) * sizes.xCountOfIcons) + 1
 	local finalY = differenceByIcons < 2 and sizes.yFileList or sizes.yFileList + math.floor((differenceByIcons - 1) * sizes.iconTotalHeight)
 	local finalTotalCountOfIcons = sizes.totalCountOfIcons + 2 * sizes.xCountOfIcons
-	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xMain + 2, finalY, sizes.xCountOfIcons, sizes.yCountOfIcons, sizes.fromIcon, finalTotalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPathHistory[currentWorkPathHistoryElement], fileList, config.showFileFormat, 0x262626)
+	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xMain + 2, finalY, sizes.xCountOfIcons, sizes.yCountOfIcons, sizes.fromIcon, finalTotalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPathHistory[currentWorkPathHistoryElement], fileList, config.showFileFormat, 0x262626, false)
 	buffer.resetDrawLimit()
 	--Ебашим скроллбар
 	buffer.scrollBar(sizes.xFinderEnd, sizes.yMain, 1, sizes.mainHeight, #fileList, sizes.fromIcon, 0xCCCCCC, 0x666666)

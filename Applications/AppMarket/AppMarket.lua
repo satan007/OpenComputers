@@ -47,10 +47,12 @@ local typeFilters = {
 }
 
 local appStorePath = "MineOS/System/AppStore/"
+local pathAllApplications = "MineOS/System/OS/REpository"
+local ApplicationsRep = ecs.getFileList(pathAllApplications)
 local pathToApplications = "MineOS/System/OS/Applications.txt"
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
 -- local topBarElements = {{title = "Приложения", type = "Application"}, {title = "Библиотеки", type = "Library"}, {title = "Обои", type = "Wallpaper"}, {title = "Другое"}, {title = "Обновления"}}
-local topBarElements = {"Приложения", "Библиотеки", "Обои", "Другое", "Обновления"}
+local topBarElements = {"Приложения", "Библиотеки", "Обои", "Другое", "Обновления", "Репозиторий"}
 local oldApplications, newApplications, currentApps, changes = {}, {}, {}, {}
 
 local currentTopBarElement = 1
@@ -281,12 +283,14 @@ local function flush()
 	currentApps = {}
 end
 
-local function loadOldApplications()
-	oldApplications = files.loadTableFromFile(pathToApplications)
+local function loadOldApplications(i)
+	--oldApplications = files.loadTableFromFile(pathToApplications)
+	oldApplications=files.loadTableFromFile(pathAllApplications..ApplicationsRep[i].."Application.txt")
 end
 
-local function saveOldApplications()
-	files.saveTableToFile(pathToApplications, oldApplications)
+local function saveOldApplications(i)
+	--files.saveTableToFile(pathToApplications, oldApplications)
+	files.saveTableToFile(pathAllApplications..ApplicationsRep[i].."Application.txt", oldApplications)
 end
 
 local function drawAll(refreshIcons, force)
@@ -328,7 +332,7 @@ local function updateAll()
 	end
 	changes = {}
 	oldApplications = newApplications
-	saveOldApplications()
+	saveOldApplications(1)
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -344,7 +348,7 @@ end
 fs.makeDirectory(appStorePath)
 calculateSizes()
 flush()
-loadOldApplications()
+loadOldApplications(1)
 drawTopBar()
 GUI.windowShadow(sizes.x, sizes.y, sizes.width, sizes.height, 50)
 updateImageWindowWithText("Загрузка списка приложений")
