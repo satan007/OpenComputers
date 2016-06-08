@@ -240,7 +240,7 @@ end
 
 local function getChanges()
 	changes = {}
-	for j = 1, #newApplications do
+	for j = 1, #newApplications+1 do
 		local matchFound = false
 		for i = 1, #oldApplications do	
 			if oldApplications[i].name == newApplications[j].name then
