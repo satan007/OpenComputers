@@ -342,7 +342,7 @@
     icon="satan007/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.5,
+    version=1.52,
      resources={
       {
         name="Localization/Russian.lang",
