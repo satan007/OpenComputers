@@ -47,9 +47,10 @@ local typeFilters = {
 }
 
 local appStorePath = "MineOS/System/AppStore/"
-local pathAllApplications = "MineOS/System/OS/REpository"
-local ApplicationsRep = ecs.getFileList(pathAllApplications)
-local pathToApplications = "MineOS/System/OS/Applications.txt"
+local pathAllApplications = "MineOS/System/OS/Repository/AlnaStudio/Applications.txt"
+--local ApplicationsRep = ecs.getFileList(pathAllApplications)
+local pathToApplications = "MineOS/System/OS/Repository/AlnaStudio/Applications.txt"
+pathAllApplications=pathToApplications
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
 -- local topBarElements = {{title = "Приложения", type = "Application"}, {title = "Библиотеки", type = "Library"}, {title = "Обои", type = "Wallpaper"}, {title = "Другое"}, {title = "Обновления"}}
 local topBarElements = {"Приложения", "Библиотеки", "Обои", "Другое", "Обновления", "Репозиторий"}
@@ -285,12 +286,12 @@ end
 
 local function loadOldApplications(i)
 	--oldApplications = files.loadTableFromFile(pathToApplications)
-	oldApplications=files.loadTableFromFile(pathAllApplications..ApplicationsRep[i].."Application.txt")
+	oldApplications=files.loadTableFromFile(pathAllApplications)
 end
 
 local function saveOldApplications(i)
 	--files.saveTableToFile(pathToApplications, oldApplications)
-	files.saveTableToFile(pathAllApplications..ApplicationsRep[i].."Application.txt", oldApplications)
+	files.saveTableToFile(pathAllApplications, oldApplications)
 end
 
 local function drawAll(refreshIcons, force)
@@ -332,7 +333,7 @@ local function updateAll()
 	end
 	changes = {}
 	oldApplications = newApplications
-	saveOldApplications(1)
+	saveOldApplications("1")
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -348,7 +349,7 @@ end
 fs.makeDirectory(appStorePath)
 calculateSizes()
 flush()
-loadOldApplications(1)
+loadOldApplications("1")
 drawTopBar()
 GUI.windowShadow(sizes.x, sizes.y, sizes.width, sizes.height, 50)
 updateImageWindowWithText("Загрузка списка приложений")
